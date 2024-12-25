@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 15px;
+            font-size: 16px;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Billing System</h1>
+        <div id="catalog-section">
+            <h2>Product Catalog</h2>
+            <table id="catalog-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamic Rows Here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="bill-section">
+            <h2>Current Bill</h2>
+            <table id="bill-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamic Rows Here -->
+                </tbody>
+            </table>
+            <h3>Total: <span id="total-price">0.00</span></h3>
+        </div>
+
+        <div id="actions">
+            <button class="button" onclick="viewRecentTransactions()">View Recent Transactions</button>
+            <button class="button" onclick="undoLastItem()">Last Item</button>
+        </div>
+    </div>
+
+    <script>
+        const catalog = [
+            { id: 1, name: "Apple", price: 100 },
+            { id: 2, name: "Banana", price: 50 },
+            { id: 3, name: "Orange", price: 75 },
+            { id: 4, name: "Milk (1L)", price: 50 },
+            { id: 5, name: "Bread", price: 20 },
+            { id: 6, name: "Rice (1kg)", price: 75 },
+            { id: 7, name: "Eggs (12)", price: 25 },
+            { id: 8, name: "Chicken (1kg)", price: 500 },
+            { id: 9, name: "Tomato (1kg)", price: 30 },
+            { id: 10, name: "Potato (1kg)", price: 60 }
+        ];
+
+        const bill = [];
+        const transactions = [];
+
+        function loadCatalog() {
+            const catalogTableBody = document.getElementById("catalog-table").getElementsByTagName("tbody")[0];
+            catalogTableBody.innerHTML = "";
+
+            catalog.forEach((product) => {
+                const row = catalogTableBody.insertRow();
+                row.insertCell(0).innerText = product.id;
+                row.insertCell(1).innerText = product.name;
+                row.insertCell(2).innerText = product.price.toFixed(2);
+                const actionCell = row.insertCell(3);
+                const button = document.createElement("button");
+                button.innerText = "Add to Bill";
+                button.className = "button";
+                button.onclick = () => addToBill(product.id);
+                actionCell.appendChild(button);
+            });
+        }
+
+        function addToBill(productId) {
+            const product = catalog.find((item) => item.id === productId);
+            const existing = bill.find((item) => item.id === productId);
+
+            if (existing) {
+                existing.qty++;
+                existing.totalPrice += product.price;
+            } else {
+                bill.push({
+                    id: product.id,
+                    name: product.name,
+                    qty: 1,
+                    price: product.price,
+                    totalPrice: product.price
+                });
+            }
+
+            transactions.push(`Added ${product.name}`);
+            updateBillTable();
+        }
+
+        function updateBillTable() {
+            const billTableBody = document.getElementById("bill-table").getElementsByTagName("tbody")[0];
+            billTableBody.innerHTML = "";
+
+            let total = 0;
+
+            bill.forEach((item) => {
+                const row = billTableBody.insertRow();
+                row.insertCell(0).innerText = item.id;
+                row.insertCell(1).innerText = item.name;
+                row.insertCell(2).innerText = item.qty;
+                row.insertCell(3).innerText = item.totalPrice.toFixed(2);
+                total += item.totalPrice;
+
+                const actionCell = row.insertCell(4);
+                const button = document.createElement("button");
+                button.innerText = "Remove";
+                button.className = "button";
+                button.onclick = () => removeFromBill(item.id);
+                actionCell.appendChild(button);
+            });
+
+            document.getElementById("total-price").innerText = total.toFixed(2);
+        }
+
+        // Remove item from bill
+        function removeFromBill(productId) {
+            const index = bill.findIndex((item) => item.id === productId);
+            if (index > -1) {
+                transactions.push(`Removed ${bill[index].name}`);
+                bill.splice(index, 1);
+                updateBillTable();
+            }
+        }
+
+        function viewRecentTransactions() {
+            alert("Recent Transactions:\n" + transactions.slice(-5).join("\n"));
+        }
+
+        function undoLastItem() {
+            if (transactions.length > 0) {
+                const lastTransaction = transactions.pop();
+                alert(`Undo: ${lastTransaction}`);
+            } else {
+                alert("Nothing to undo.");
+            }
+        }
+
+        window.onload = () => loadCatalog();
+    </script>
+</body>
+</html>
